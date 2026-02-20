@@ -162,7 +162,7 @@
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 4px;
+  width: 1.5px;
   height: 0;
 }
 
@@ -175,21 +175,21 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.45 0 0);
+  background: oklch(0.75 0.18 165 / 0.9);
   border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.55 0 0);
+  background: oklch(0.78 0.2 165 / 0.95);
 }
 
 .menu-scroll {
   scrollbar-width: thin;
-  scrollbar-color: oklch(0.45 0 0) transparent;
+  scrollbar-color: oklch(0.75 0.18 165 / 0.9) transparent;
 }
 
 .menu-scroll::-webkit-scrollbar {
-  width: 3px;
+  width: 1.5px;
   height: 0;
 }
 
@@ -202,8 +202,52 @@
 }
 
 .menu-scroll::-webkit-scrollbar-thumb {
-  background: oklch(0.45 0 0);
+  background: oklch(0.75 0.18 165 / 0.9);
   border-radius: 999px;
+}
+
+.dynamic-card {
+  position: relative;
+  overflow: hidden;
+  transition: border-color 260ms ease, transform 260ms ease, box-shadow 260ms ease,
+    background-color 260ms ease, backdrop-filter 260ms ease;
+}
+
+.dynamic-card::before {
+  content: "";
+  position: absolute;
+  inset: -40% -20%;
+  background: radial-gradient(circle at center, oklch(0.75 0.18 165 / 0.2), transparent 65%);
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 260ms ease, transform 260ms ease;
+  pointer-events: none;
+}
+
+.dynamic-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent, oklch(0.75 0.18 165 / 0.08), transparent);
+  opacity: 0;
+  transition: opacity 260ms ease;
+  pointer-events: none;
+}
+
+.dynamic-card:hover {
+  border-color: oklch(0.75 0.18 165 / 0.45);
+  box-shadow: 0 0 0 1px oklch(0.75 0.18 165 / 0.2), 0 16px 40px oklch(0.75 0.18 165 / 0.12);
+  backdrop-filter: blur(18px) saturate(1.2);
+  transform: translateY(-2px);
+}
+
+.dynamic-card:hover::before {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.dynamic-card:hover::after {
+  opacity: 1;
 }
 
 @keyframes slide-in-left {

@@ -210,7 +210,7 @@ export function SidebarNav({ collapsible = true }: { collapsible?: boolean }) {
                             : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
                         )}
                       >
-                        <span className="transition-transform duration-200 group-hover:scale-110">
+                        <span className="flex size-5 items-center justify-center transition-transform duration-200 group-hover:scale-110 [&>svg]:size-5">
                           {item.icon}
                         </span>
                         <span
@@ -237,7 +237,7 @@ export function SidebarNav({ collapsible = true }: { collapsible?: boolean }) {
                               : "rotate(-90deg)",
                           }}
                         >
-                          <ChevronDown className="size-4" />
+                          <ChevronDown className="size-5" />
                         </span>
                       </button>
                       <div
@@ -274,7 +274,9 @@ export function SidebarNav({ collapsible = true }: { collapsible?: boolean }) {
                           : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
                       )}
                     >
-                      {item.icon}
+                      <span className="flex size-5 items-center justify-center [&>svg]:size-5">
+                        {item.icon}
+                      </span>
                       <span
                         className={cn(
                           "flex-1 overflow-hidden whitespace-nowrap transition-all duration-300",
@@ -327,7 +329,7 @@ export function SidebarNav({ collapsible = true }: { collapsible?: boolean }) {
           </div>
           <Settings
             className={cn(
-              "size-4 text-muted-foreground transition-all duration-300 group-hover:rotate-90",
+              "size-5 text-muted-foreground transition-all duration-300 group-hover:rotate-90",
               isExpanded ? "opacity-100" : "w-0 opacity-0"
             )}
           />

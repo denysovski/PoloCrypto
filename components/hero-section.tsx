@@ -16,6 +16,7 @@ function formatCompact(value: number) {
 export function HeroSection() {
   const { leaderboard, marketVolume } = useMarketSim(2200)
   const [scrollY, setScrollY] = useState(0)
+  const [pointer, setPointer] = useState({ x: 50, y: 30 })
 
   useEffect(() => {
     let frameId = 0
@@ -39,7 +40,15 @@ export function HeroSection() {
   const parallaxOffset = Math.min(scrollY * 0.08, 28)
 
   return (
-    <section className="relative overflow-hidden px-6 pb-16 pt-20 sm:px-8 sm:pt-24 lg:px-16">
+    <section
+      className="relative overflow-hidden px-6 pb-16 pt-20 sm:px-8 sm:pt-24 lg:px-16"
+      onMouseMove={(event) => {
+        const bounds = event.currentTarget.getBoundingClientRect()
+        const x = ((event.clientX - bounds.left) / bounds.width) * 100
+        const y = ((event.clientY - bounds.top) / bounds.height) * 100
+        setPointer({ x, y })
+      }}
+    >
       <div
         className="absolute inset-0 animate-gradient bg-[linear-gradient(135deg,oklch(0.12_0.02_260),oklch(0.08_0.03_200),oklch(0.1_0.04_165),oklch(0.06_0.02_280),oklch(0.12_0.02_260))] bg-size-[300%_300%]"
         style={{ transform: `translateY(${parallaxOffset * -0.35}px)` }}
@@ -52,10 +61,16 @@ export function HeroSection() {
         className="pointer-events-none absolute bottom-0 right-10 size-80 rounded-full bg-chart-2/10 blur-[110px]"
         style={{ transform: `translateY(${parallaxOffset * 0.45}px)` }}
       />
+      <div
+        className="pointer-events-none absolute inset-0 transition-opacity duration-300"
+        style={{
+          background: `radial-gradient(420px circle at ${pointer.x}% ${pointer.y}%, oklch(0.75 0.18 165 / 0.18), transparent 62%)`,
+        }}
+      />
 
       <div className="relative z-10 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
         <ScrollReveal direction="left">
-          <div className="rounded-[2.2rem] border border-border/70 bg-background/45 p-6 backdrop-blur-md sm:p-8 lg:p-10">
+          <div className="dynamic-card rounded-[2.2rem] border border-border/70 bg-background/45 p-6 backdrop-blur-md sm:p-8 lg:p-10">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-primary">
               <Sparkles className="size-3.5" />
               Live Market Intelligence
@@ -90,19 +105,19 @@ export function HeroSection() {
             </div>
 
             <div className="mt-10 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border border-border/80 bg-background/50 p-4">
+              <div className="dynamic-card rounded-2xl border border-border/80 bg-background/50 p-4">
                 <p className="text-xs uppercase tracking-widest text-muted-foreground">Best Performer</p>
                 <p className="mt-2 font-mono text-2xl font-bold text-foreground">{leaderboard[0]?.symbol}</p>
                 <p className="text-sm text-chart-1">
                   {leaderboard[0]?.change24h ? `${leaderboard[0].change24h > 0 ? "+" : ""}${leaderboard[0].change24h.toFixed(2)}%` : "--"}
                 </p>
               </div>
-              <div className="rounded-2xl border border-border/80 bg-background/50 p-4">
+              <div className="dynamic-card rounded-2xl border border-border/80 bg-background/50 p-4">
                 <p className="text-xs uppercase tracking-widest text-muted-foreground">24h Volume</p>
                 <p className="mt-2 font-mono text-2xl font-bold text-foreground">${formatCompact(marketVolume)}</p>
                 <p className="text-sm text-muted-foreground">simulated live feed</p>
               </div>
-              <div className="rounded-2xl border border-border/80 bg-background/50 p-4">
+              <div className="dynamic-card rounded-2xl border border-border/80 bg-background/50 p-4">
                 <p className="text-xs uppercase tracking-widest text-muted-foreground">Live Assets</p>
                 <p className="mt-2 font-mono text-2xl font-bold text-foreground">{leaderboard.length}</p>
                 <p className="text-sm text-muted-foreground">auto-refreshing</p>
@@ -113,7 +128,7 @@ export function HeroSection() {
 
         <div className="grid gap-6">
           <ScrollReveal direction="right" delay={120}>
-            <div className="relative overflow-hidden rounded-4xl border border-border/70 bg-card/35 p-6 backdrop-blur-sm">
+            <div className="dynamic-card relative overflow-hidden rounded-4xl border border-border/70 bg-card/35 p-6 backdrop-blur-sm">
               <div className="pointer-events-none absolute -right-10 -top-10 size-44 rounded-full border border-primary/20" />
               <div className="pointer-events-none absolute right-4 top-4 size-28 rounded-full bg-primary/10 blur-xl" />
               <p className="text-xs uppercase tracking-widest text-muted-foreground">Spheric Alpha Block</p>
@@ -131,7 +146,7 @@ export function HeroSection() {
           <ScrollReveal direction="up" delay={180}>
             <div className="grid grid-cols-2 gap-4">
               {leaderboard.slice(0, 2).map((coin, index) => (
-                <div key={coin.symbol} className="rounded-[1.6rem] border border-border/70 bg-background/45 p-4 backdrop-blur-sm">
+                <div key={coin.symbol} className="dynamic-card rounded-[1.6rem] border border-border/70 bg-background/45 p-4 backdrop-blur-sm">
                   <p className="text-xs uppercase tracking-widest text-muted-foreground">Top {index + 1}</p>
                   <p className="mt-2 font-mono text-xl font-bold text-foreground">{coin.symbol}</p>
                   <p className="mt-1 text-sm text-muted-foreground">{coin.name}</p>

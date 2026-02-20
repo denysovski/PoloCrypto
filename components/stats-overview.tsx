@@ -36,27 +36,27 @@ export function StatsOverview() {
 
       <div className="relative z-10 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
         <ScrollReveal direction="down">
-          <div className="rounded-4xl border border-border bg-background/35 p-6 backdrop-blur-sm sm:p-8">
+          <div className="dynamic-card rounded-4xl border border-border bg-background/35 p-6 backdrop-blur-sm sm:p-8">
             <p className="text-xs uppercase tracking-widest text-muted-foreground">Live Macro Snapshot</p>
             <h3 className="mt-3 font-mono text-3xl font-extrabold text-foreground">Market Momentum</h3>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-full border border-border/80 bg-background/60 p-6 text-center">
+              <div className="dynamic-card rounded-full border border-border/80 bg-background/60 p-6 text-center">
                 <p className="text-xs uppercase tracking-widest text-muted-foreground">Total Cap</p>
                 <p className="mt-2 font-mono text-2xl font-bold text-foreground">${formatCompact(marketCap)}</p>
               </div>
-              <div className="rounded-full border border-border/80 bg-background/60 p-6 text-center">
+              <div className="dynamic-card rounded-full border border-border/80 bg-background/60 p-6 text-center">
                 <p className="text-xs uppercase tracking-widest text-muted-foreground">24h Volume</p>
                 <p className="mt-2 font-mono text-2xl font-bold text-foreground">${formatCompact(marketVolume)}</p>
               </div>
             </div>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-border/70 bg-background/50 px-4 py-3">
+              <div className="dynamic-card rounded-2xl border border-border/70 bg-background/50 px-4 py-3">
                 <p className="text-xs uppercase tracking-widest text-muted-foreground">Volume/Cap Ratio</p>
                 <p className="mt-1 font-mono text-xl font-bold text-foreground">{volumeToCap.toFixed(2)}%</p>
               </div>
-              <div className="rounded-2xl border border-border/70 bg-background/50 px-4 py-3">
+              <div className="dynamic-card rounded-2xl border border-border/70 bg-background/50 px-4 py-3">
                 <p className="text-xs uppercase tracking-widest text-muted-foreground">Volatility Index</p>
                 <p className="mt-1 font-mono text-xl font-bold text-foreground">{volatilityIndex.toFixed(2)}</p>
               </div>
@@ -70,33 +70,33 @@ export function StatsOverview() {
         </ScrollReveal>
 
         <ScrollReveal direction="zoom" delay={120}>
-          <div className="rounded-4xl border border-border bg-background/35 p-6 backdrop-blur-sm sm:p-8">
+          <div className="dynamic-card rounded-4xl border border-border bg-background/35 p-6 backdrop-blur-sm sm:p-8">
             <p className="text-xs uppercase tracking-widest text-muted-foreground">Breadth & Direction</p>
             <div className="mt-4 space-y-3">
-              <div className="flex items-center justify-between rounded-2xl border border-border/70 bg-background/50 px-4 py-3">
+              <div className="dynamic-card flex items-center justify-between rounded-2xl border border-border/70 bg-background/50 px-4 py-3">
                 <span className="text-sm text-muted-foreground">Coins in green</span>
                 <span className="font-mono text-lg font-bold text-chart-1">
                   {positiveCount}/{leaderboard.length}
                 </span>
               </div>
-              <div className="flex items-center justify-between rounded-2xl border border-border/70 bg-background/50 px-4 py-3">
+              <div className="dynamic-card flex items-center justify-between rounded-2xl border border-border/70 bg-background/50 px-4 py-3">
                 <span className="text-sm text-muted-foreground">Average 24h move</span>
                 <span className={`font-mono text-lg font-bold ${avgChange >= 0 ? "text-chart-1" : "text-destructive"}`}>
                   {avgChange > 0 ? "+" : ""}
                   {avgChange.toFixed(2)}%
                 </span>
               </div>
-              <div className="flex items-center justify-between rounded-2xl border border-border/70 bg-background/50 px-4 py-3">
+              <div className="dynamic-card flex items-center justify-between rounded-2xl border border-border/70 bg-background/50 px-4 py-3">
                 <span className="text-sm text-muted-foreground">Current leader</span>
                 <span className="font-mono text-lg font-bold text-foreground">{leaderboard[0]?.symbol ?? "--"}</span>
               </div>
-              <div className="flex items-center justify-between rounded-2xl border border-border/70 bg-background/50 px-4 py-3">
+              <div className="dynamic-card flex items-center justify-between rounded-2xl border border-border/70 bg-background/50 px-4 py-3">
                 <span className="text-sm text-muted-foreground">Strength spread</span>
                 <span className="font-mono text-lg font-bold text-foreground">{spread.toFixed(2)}%</span>
               </div>
             </div>
 
-            <div className="mt-4 rounded-2xl border border-border/70 bg-background/45 p-4">
+            <div className="dynamic-card mt-4 rounded-2xl border border-border/70 bg-background/45 p-4">
               <p className="text-xs uppercase tracking-widest text-muted-foreground">Insight Feed</p>
               <ul className="mt-3 space-y-2 text-sm">
                 <li className="flex items-center justify-between text-muted-foreground">
