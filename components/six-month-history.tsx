@@ -1,27 +1,18 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
-import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
+import { useEffect, useState } from "react"
 import { ScrollReveal } from "@/components/scroll-reveal"
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart"
+import { TrendingDown, TrendingUp } from "lucide-react"
 
-type CoinKey = "bitcoin" | "ethereum" | "solana"
-
-type HistoryPoint = {
-  timestamp: number
-  dateLabel: string
-  price: number
+type MarketCoin = {
+  id: string
+  symbol: string
+  name: string
+  image: string
+  current_price: number
+  market_cap: number
+  price_change_percentage_24h: number
 }
-
-const coins: { key: CoinKey; label: string; symbol: string }[] = [
-  { key: "bitcoin", label: "Bitcoin", symbol: "BTC" },
-  { key: "ethereum", label: "Ethereum", symbol: "ETH" },
-  { key: "solana", label: "Solana", symbol: "SOL" },
-]
 
 function formatPrice(value: number) {
   if (value >= 1000) {
@@ -34,70 +25,43 @@ function formatPrice(value: number) {
 }
 
 export function SixMonthHistory() {
-  const [selectedCoin, setSelectedCoin] = useState<CoinKey>("bitcoin")
-  const [points, setPoints] = useState<HistoryPoint[]>([])
+  const [coins, setCoins] = useState<MarketCoin[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let active = true
 
-    const fetchHistory = async () => {
+    const fetchTopByMarketCap = async () => {
       setLoading(true)
       try {
         const response = await fetch(
-          `https://api.coingecko.com/api/v3/coins/${selectedCoin}/market_chart?vs_currency=usd&days=max&interval=daily`,
+          "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false&price_change_percentage=24h",
           { cache: "no-store" }
         )
 
-        const data = await response.json()
+        const data = (await response.json()) as MarketCoin[]
         if (!active) return
 
-        const now = Date.now()
-        const cutoff = now - 180 * 24 * 60 * 60 * 1000
-
-        const history: HistoryPoint[] = (data.prices ?? [])
-          .map((entry: [number, number]) => {
-            const date = new Date(entry[0])
-            return {
-              timestamp: entry[0],
-              price: entry[1],
-              dateLabel: date.toLocaleDateString("en-US", {
-                month: "short",
-                day: "2-digit",
-              }),
-            }
-          })
-          .filter((point: HistoryPoint) => point.timestamp >= cutoff)
-
-        setPoints(history)
+        setCoins(data)
       } catch {
         if (!active) return
-        setPoints([])
+        setCoins([])
       } finally {
         if (active) setLoading(false)
       }
     }
 
-    fetchHistory()
+    fetchTopByMarketCap()
 
     return () => {
       active = false
     }
-  }, [selectedCoin])
-
-  const selectedMeta = useMemo(
-    () => coins.find((coin) => coin.key === selectedCoin) ?? coins[0],
-    [selectedCoin]
-  )
-
-  const first = points[0]?.price ?? 0
-  const latest = points[points.length - 1]?.price ?? 0
-  const performance = first > 0 ? ((latest - first) / first) * 100 : 0
+  }, [])
 
   return (
     <section className="px-6 py-24 sm:px-8 lg:px-16">
       <ScrollReveal>
-        <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div className="mb-8">
           <div>
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-primary">
               Full Market History Window
@@ -106,93 +70,58 @@ export function SixMonthHistory() {
               Last 6 Months Trend
             </h2>
             <p className="mt-3 text-sm text-muted-foreground">
-              Pulls complete history from CoinGecko and displays the latest 180 days.
+              Top 10 cryptocurrencies by market cap (live ranking from CoinGecko).
             </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {coins.map((coin) => (
-              <button
-                key={coin.key}
-                type="button"
-                onClick={() => setSelectedCoin(coin.key)}
-                className={`rounded-full border px-4 py-2 text-sm font-medium transition-all duration-200 ${
-                  selectedCoin === coin.key
-                    ? "border-primary/40 bg-primary/15 text-primary"
-                    : "border-border bg-background/60 text-muted-foreground hover:border-primary/30 hover:text-foreground"
-                }`}
-              >
-                {coin.symbol}
-              </button>
-            ))}
           </div>
         </div>
       </ScrollReveal>
 
       <ScrollReveal direction="up" delay={100}>
         <div className="dynamic-card rounded-4xl border border-border bg-card/35 p-4 backdrop-blur-sm sm:p-6">
-          <div className="mb-4 grid gap-4 sm:grid-cols-3">
-            <div className="dynamic-card rounded-2xl border border-border/70 bg-background/45 px-4 py-3">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">Asset</p>
-              <p className="mt-1 font-mono text-xl font-bold text-foreground">{selectedMeta.label}</p>
+          <div className="overflow-hidden rounded-3xl border border-border/70">
+            <div className="hidden grid-cols-[3rem_1.4fr_1fr_1fr] border-b border-border/70 bg-background/45 px-4 py-3 text-xs uppercase tracking-widest text-muted-foreground sm:grid">
+              <span>#</span>
+              <span>Asset</span>
+              <span className="text-right">Price</span>
+              <span className="text-right">24h</span>
             </div>
-            <div className="dynamic-card rounded-2xl border border-border/70 bg-background/45 px-4 py-3">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">Latest Price</p>
-              <p className="mt-1 font-mono text-xl font-bold text-foreground">${formatPrice(latest)}</p>
-            </div>
-            <div className="dynamic-card rounded-2xl border border-border/70 bg-background/45 px-4 py-3">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">6M Performance</p>
-              <p className={`mt-1 font-mono text-xl font-bold ${performance >= 0 ? "text-chart-1" : "text-destructive"}`}>
-                {performance >= 0 ? "+" : ""}
-                {performance.toFixed(2)}%
-              </p>
+
+            <div className="divide-y divide-border/60">
+              {coins.map((coin, index) => (
+                <div
+                  key={coin.id}
+                  className="dynamic-card grid grid-cols-[2.2rem_1fr] items-center gap-3 bg-background/35 px-4 py-3 sm:grid-cols-[3rem_1.4fr_1fr_1fr]"
+                >
+                  <span className="font-mono text-sm text-muted-foreground">{index + 1}</span>
+                  <div className="flex items-center gap-3">
+                    <img src={coin.image} alt={coin.name} className="size-6 rounded-full" />
+                    <div>
+                      <p className="font-mono text-sm font-bold text-foreground">{coin.name}</p>
+                      <p className="text-xs uppercase text-muted-foreground">{coin.symbol}</p>
+                    </div>
+                  </div>
+                  <p className="text-right font-mono text-sm font-semibold text-foreground">
+                    ${formatPrice(coin.current_price)}
+                  </p>
+                  <p
+                    className={`flex items-center justify-end gap-1 text-sm font-semibold ${
+                      coin.price_change_percentage_24h >= 0 ? "text-chart-1" : "text-destructive"
+                    }`}
+                  >
+                    {coin.price_change_percentage_24h >= 0 ? (
+                      <TrendingUp className="size-3.5" />
+                    ) : (
+                      <TrendingDown className="size-3.5" />
+                    )}
+                    {coin.price_change_percentage_24h >= 0 ? "+" : ""}
+                    {coin.price_change_percentage_24h.toFixed(2)}%
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
 
-          <div className="h-72 w-full sm:h-96">
-            <ChartContainer
-              config={{
-                price: {
-                  label: "Price",
-                  color: "oklch(0.75 0.18 165)",
-                },
-              }}
-              className="h-full w-full"
-            >
-              <LineChart data={points} margin={{ left: 12, right: 12, top: 10, bottom: 0 }}>
-                <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                <XAxis dataKey="dateLabel" tickLine={false} axisLine={false} minTickGap={22} />
-                <YAxis
-                  tickLine={false}
-                  axisLine={false}
-                  width={74}
-                  tickFormatter={(value) => `$${Number(value).toLocaleString("en-US", { maximumFractionDigits: 0 })}`}
-                />
-                <ChartTooltip
-                  content={
-                    <ChartTooltipContent
-                      labelFormatter={(_, payload) => {
-                        const row = payload?.[0]?.payload as HistoryPoint | undefined
-                        return row ? `Date: ${row.dateLabel}` : ""
-                      }}
-                      formatter={(value) => `$${Number(value).toLocaleString("en-US", { maximumFractionDigits: 2 })}`}
-                    />
-                  }
-                />
-                <Line
-                  type="monotone"
-                  dataKey="price"
-                  stroke="var(--color-price)"
-                  strokeWidth={2.4}
-                  dot={false}
-                  isAnimationActive={true}
-                  animationDuration={900}
-                />
-              </LineChart>
-            </ChartContainer>
-          </div>
-
-          {loading && <p className="mt-3 text-xs text-muted-foreground">Loading 6-month history...</p>}
+          {loading && <p className="mt-3 text-xs text-muted-foreground">Loading top market-cap list...</p>}
         </div>
       </ScrollReveal>
     </section>
