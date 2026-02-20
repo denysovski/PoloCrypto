@@ -10,7 +10,7 @@ export function MobileNav() {
   return (
     <>
       {/* Mobile top bar */}
-      <div className="fixed left-1/2 top-[5px] z-50 flex w-4/5 -translate-x-1/2 items-center justify-between rounded-full border border-border bg-background/80 px-4 py-2.5 backdrop-blur-xl lg:hidden">
+      <div className="fixed left-1/2 top-1.25 z-50 flex w-4/5 -translate-x-1/2 items-center justify-between rounded-full border border-border bg-background/80 px-4 py-2.5 backdrop-blur-xl lg:hidden">
         <div className="flex items-center gap-2">
           <div className="flex size-8 items-center justify-center rounded-lg bg-primary shadow-[0_0_12px_oklch(0.75_0.18_165/0.3)]">
             <Zap className="size-4 text-primary-foreground" />
@@ -41,7 +41,7 @@ export function MobileNav() {
             onClick={() => setOpen(false)}
           />
           <div className="fixed left-0 top-16 z-50 animate-slide-in-left lg:hidden">
-            <SidebarNav />
+            <SidebarNav collapsible={false} />
           </div>
         </>
       )}

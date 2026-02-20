@@ -15,7 +15,7 @@ import { CustomCursor } from "@/components/custom-cursor"
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen">
+    <div className="mx-auto flex min-h-screen w-full max-w-480 overflow-x-hidden">
       {/* Custom cursor */}
       <CustomCursor />
 
@@ -28,7 +28,7 @@ export default function Home() {
       <MobileNav />
 
       {/* Main content */}
-      <main className="flex-1 pt-20 lg:ml-72 lg:pt-0">
+      <main className="min-w-0 flex-1 pt-20 lg:ml-20 lg:pt-0">
         <MarketTicker />
         <HeroSection />
         <PartnersSection />
