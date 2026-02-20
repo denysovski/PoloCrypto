@@ -313,7 +313,7 @@ export function SidebarNav({ collapsible = true }: { collapsible?: boolean }) {
             "group flex items-center gap-3 rounded-lg bg-sidebar-accent/50 px-3 py-3 transition-all duration-300 hover:bg-sidebar-accent"
           )}
         >
-          <div className="flex size-9 items-center justify-center rounded-full bg-primary/20 font-mono text-sm font-bold text-primary ring-2 ring-primary/10 transition-all duration-300 group-hover:ring-primary/30 group-hover:shadow-[0_0_15px_oklch(0.75_0.18_165/0.2)]">
+          <div className="flex size-9 min-h-9 min-w-9 shrink-0 items-center justify-center rounded-full bg-primary/20 font-mono text-sm font-bold text-primary ring-2 ring-primary/10 transition-all duration-300 group-hover:ring-primary/30 group-hover:shadow-[0_0_15px_oklch(0.75_0.18_165/0.2)]">
             JD
           </div>
           <div

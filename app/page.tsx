@@ -16,6 +16,7 @@ import { ScrollTopButton } from "@/components/scroll-top-button"
 import { NetworkBackground } from "@/components/network-background"
 import { LiveCoinChart } from "@/components/live-coin-chart"
 import { CrazyInsightsSection } from "@/components/crazy-insights-section"
+import { SixMonthHistory } from "@/components/six-month-history"
 
 export default function Home() {
   return (
@@ -41,6 +42,7 @@ export default function Home() {
         <FeatureCards />
         <HowItWorks />
         <LiveCoinChart />
+        <SixMonthHistory />
         <LiveMarkets />
         <StatsOverview />
         <CrazyInsightsSection />
