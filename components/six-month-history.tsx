@@ -12,6 +12,8 @@ type MarketCoin = {
   current_price: number
   market_cap: number
   price_change_percentage_24h: number
+  price_change_percentage_7d?: number
+  price_change_percentage_30d?: number
 }
 
 function formatPrice(value: number) {
@@ -35,7 +37,7 @@ export function SixMonthHistory() {
       setLoading(true)
       try {
         const response = await fetch(
-          "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false&price_change_percentage=24h",
+          "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false&price_change_percentage=24h,7d,30d",
           { cache: "no-store" }
         )
 
@@ -79,18 +81,20 @@ export function SixMonthHistory() {
       <ScrollReveal direction="up" delay={100}>
         <div className="dynamic-card rounded-4xl border border-border bg-card/35 p-4 backdrop-blur-sm sm:p-6">
           <div className="overflow-hidden rounded-3xl border border-border/70">
-            <div className="hidden grid-cols-[3rem_1.4fr_1fr_1fr] border-b border-border/70 bg-background/45 px-4 py-3 text-xs uppercase tracking-widest text-muted-foreground sm:grid">
+            <div className="hidden grid-cols-[3rem_1.4fr_1fr_1fr_1fr_1fr] border-b border-border/70 bg-background/45 px-4 py-3 text-xs uppercase tracking-widest text-muted-foreground sm:grid">
               <span>#</span>
               <span>Asset</span>
               <span className="text-right">Price</span>
               <span className="text-right">24h</span>
+              <span className="hidden text-right lg:inline">7d</span>
+              <span className="hidden text-right lg:inline">30d</span>
             </div>
 
             <div className="divide-y divide-border/60">
               {coins.map((coin, index) => (
                 <div
                   key={coin.id}
-                  className="dynamic-card grid grid-cols-[2.2rem_1fr] items-center gap-3 bg-background/35 px-4 py-3 sm:grid-cols-[3rem_1.4fr_1fr_1fr]"
+                  className="dynamic-card grid grid-cols-[2.2rem_1fr_auto] items-center gap-3 bg-background/35 px-4 py-3 sm:grid-cols-[3rem_1.4fr_1fr_1fr] lg:grid-cols-[3rem_1.4fr_1fr_1fr_1fr_1fr]"
                 >
                   <span className="font-mono text-sm text-muted-foreground">{index + 1}</span>
                   <div className="flex items-center gap-3">
@@ -115,6 +119,22 @@ export function SixMonthHistory() {
                     )}
                     {coin.price_change_percentage_24h >= 0 ? "+" : ""}
                     {coin.price_change_percentage_24h.toFixed(2)}%
+                  </p>
+                  <p
+                    className={`hidden items-center justify-end gap-1 text-sm font-semibold lg:flex ${
+                      (coin.price_change_percentage_7d ?? 0) >= 0 ? "text-chart-1" : "text-destructive"
+                    }`}
+                  >
+                    {(coin.price_change_percentage_7d ?? 0) >= 0 ? "+" : ""}
+                    {(coin.price_change_percentage_7d ?? 0).toFixed(2)}%
+                  </p>
+                  <p
+                    className={`hidden items-center justify-end gap-1 text-sm font-semibold lg:flex ${
+                      (coin.price_change_percentage_30d ?? 0) >= 0 ? "text-chart-1" : "text-destructive"
+                    }`}
+                  >
+                    {(coin.price_change_percentage_30d ?? 0) >= 0 ? "+" : ""}
+                    {(coin.price_change_percentage_30d ?? 0).toFixed(2)}%
                   </p>
                 </div>
               ))}

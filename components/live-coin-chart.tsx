@@ -27,77 +27,87 @@ function formatCompactPrice(value: number) {
 
 export function LiveCoinChart() {
   const [points, setPoints] = useState<PricePoint[]>([])
-  const [change1h, setChange1h] = useState(0)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isConnected, setIsConnected] = useState(false)
 
   useEffect(() => {
-    let active = true
+    let socket: WebSocket | null = null
 
-    const loadLastHourSeries = async () => {
-      if (!active) return
-      setIsLoading(true)
+    const connect = () => {
+      socket = new WebSocket("wss://stream.binance.com:9443/ws/btcusdt@trade")
 
-      try {
-        const nowSec = Math.floor(Date.now() / 1000)
-        const oneHourAgoSec = nowSec - 60 * 60
+      socket.onopen = () => {
+        setIsConnected(true)
+      }
 
-        const response = await fetch(
-          `https://api.coingecko.com/api/v3/coins/bitcoin/market_chart/range?vs_currency=usd&from=${oneHourAgoSec}&to=${nowSec}`,
-          { cache: "no-store" }
-        )
+      socket.onclose = () => {
+        setIsConnected(false)
+      }
 
-        const data = await response.json()
-        if (!active) return
+      socket.onerror = () => {
+        setIsConnected(false)
+      }
 
-        const parsed: PricePoint[] = (data.prices ?? [])
-          .map((entry: [number, number]) => {
-            const date = new Date(entry[0])
-            return {
-              timestamp: entry[0],
-              price: entry[1],
-              timeLabel: date.toLocaleTimeString("en-US", {
-                hour: "2-digit",
-                minute: "2-digit",
-              }),
+      socket.onmessage = (event) => {
+        const payload = JSON.parse(event.data) as {
+          p: string
+          T: number
+        }
+
+        const price = Number(payload.p)
+        const secondStamp = Math.floor(payload.T / 1000) * 1000
+        const label = new Date(secondStamp).toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })
+
+        setPoints((prev) => {
+          const next = [...prev]
+          const last = next[next.length - 1]
+
+          if (last && last.timestamp === secondStamp) {
+            next[next.length - 1] = {
+              timestamp: secondStamp,
+              price,
+              timeLabel: label,
             }
-          })
-          .sort((a: PricePoint, b: PricePoint) => a.timestamp - b.timestamp)
+          } else {
+            next.push({ timestamp: secondStamp, price, timeLabel: label })
+          }
 
-        const deduped = parsed.filter(
-          (point, index) => index === 0 || point.timestamp !== parsed[index - 1].timestamp
-        )
-
-        setPoints(deduped)
-
-        if (deduped.length >= 2) {
-          const first = deduped[0].price
-          const last = deduped[deduped.length - 1].price
-          setChange1h(((last - first) / first) * 100)
-        } else {
-          setChange1h(0)
-        }
-      } catch {
-        if (!active) return
-        setPoints([])
-        setChange1h(0)
-      } finally {
-        if (active) {
-          setIsLoading(false)
-        }
+          return next.slice(-180)
+        })
       }
     }
 
-    loadLastHourSeries()
-    const interval = setInterval(loadLastHourSeries, 15000)
+    connect()
 
     return () => {
-      active = false
-      clearInterval(interval)
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.close()
+      }
     }
   }, [])
 
   const latestPrice = points[points.length - 1]?.price ?? 0
   const pointCount = useMemo(() => points.length, [points])
+  const priceChange =
+    points.length > 1
+      ? ((points[points.length - 1].price - points[0].price) / points[0].price) *
+        100
+      : 0
+
+  const yDomain = useMemo(() => {
+    if (points.length < 2) return [0, 1]
+    const prices = points.map((p) => p.price)
+    const min = Math.min(...prices)
+    const max = Math.max(...prices)
+    const range = max - min || min * 0.001 || 1
+    // Use dynamic padding: 10% for large ranges, 5% for medium ranges, 2% for tight ranges
+    const padPercent = range > min * 0.05 ? 0.1 : range > min * 0.01 ? 0.05 : 0.02
+    const pad = Math.max(range * padPercent, min * 0.001)
+    return [min - pad, max + pad]
+  }, [points])
 
   return (
     <section className="px-6 py-24 sm:px-8 lg:px-16">
@@ -108,10 +118,10 @@ export function LiveCoinChart() {
               Live Market API Feed
             </p>
             <h2 className="font-mono text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
-              Bitcoin Last Hour Line
+              Bitcoin Live Tick Line
             </h2>
             <p className="mt-3 text-sm text-muted-foreground">
-              Data source: CoinGecko range endpoint, refreshed every 15s.
+              Data source: Binance real-time trade stream (updates every second).
             </p>
           </div>
         </div>
@@ -123,13 +133,16 @@ export function LiveCoinChart() {
             <div>
               <p className="text-xs uppercase tracking-widest text-muted-foreground">Asset</p>
               <p className="font-mono text-2xl font-bold text-foreground">Bitcoin (BTC)</p>
+              <p className={`mt-1 text-xs font-semibold ${isConnected ? "text-chart-1" : "text-destructive"}`}>
+                {isConnected ? "Live stream connected" : "Reconnecting..."}
+              </p>
             </div>
             <div className="text-right">
               <p className="text-xs uppercase tracking-widest text-muted-foreground">Live Price</p>
               <p className="font-mono text-2xl font-bold text-foreground">${formatCompactPrice(latestPrice)}</p>
-              <p className={`text-sm font-semibold ${change1h >= 0 ? "text-chart-1" : "text-destructive"}`}>
-                {change1h >= 0 ? "+" : ""}
-                {change1h.toFixed(2)}% (1h)
+              <p className={`text-sm font-semibold ${priceChange >= 0 ? "text-chart-1" : "text-destructive"}`}>
+                {priceChange >= 0 ? "+" : ""}
+                {priceChange.toFixed(2)}% (window)
               </p>
             </div>
           </div>
@@ -155,6 +168,7 @@ export function LiveCoinChart() {
                 <YAxis
                   tickLine={false}
                   axisLine={false}
+                  domain={yDomain as [number, number]}
                   tickFormatter={(value) => `$${Number(value).toLocaleString("en-US", { maximumFractionDigits: 0 })}`}
                   width={72}
                 />
@@ -173,21 +187,18 @@ export function LiveCoinChart() {
                   type="monotone"
                   dataKey="price"
                   stroke="var(--color-price)"
-                  strokeWidth={2.3}
+                  strokeWidth={2.8}
                   dot={false}
                   connectNulls={true}
                   isAnimationActive={true}
-                  animationDuration={650}
+                  animationDuration={280}
                 />
               </LineChart>
             </ChartContainer>
           </div>
 
-          {isLoading && (
-            <p className="mt-3 text-xs text-muted-foreground">Loading Bitcoin last-hour history...</p>
-          )}
-          {!isLoading && pointCount < 2 && (
-            <p className="mt-3 text-xs text-muted-foreground">Waiting for enough points to draw full line...</p>
+          {pointCount < 2 && (
+            <p className="mt-3 text-xs text-muted-foreground">Waiting for live ticks to render line...</p>
           )}
         </div>
       </ScrollReveal>

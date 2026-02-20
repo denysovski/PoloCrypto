@@ -17,6 +17,10 @@ import { NetworkBackground } from "@/components/network-background"
 import { LiveCoinChart } from "@/components/live-coin-chart"
 import { CrazyInsightsSection } from "@/components/crazy-insights-section"
 import { SixMonthHistory } from "@/components/six-month-history"
+import { TradingGuideSection } from "@/components/trading-guide-section"
+import { FindCryptoSection } from "@/components/find-crypto-section"
+import { GainMomentumSection } from "@/components/gain-momentum-section"
+import { IsCryptoForYouSection } from "@/components/is-crypto-for-you-section"
 
 export default function Home() {
   return (
@@ -43,6 +47,10 @@ export default function Home() {
         <HowItWorks />
         <LiveCoinChart />
         <SixMonthHistory />
+        <TradingGuideSection />
+        <FindCryptoSection />
+        <GainMomentumSection />
+        <IsCryptoForYouSection />
         <LiveMarkets />
         <StatsOverview />
         <CrazyInsightsSection />
