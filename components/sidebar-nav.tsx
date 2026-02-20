@@ -12,7 +12,6 @@ import {
   Settings,
   HelpCircle,
   ChevronDown,
-  ChevronRight,
   Zap,
   Globe,
   PieChart,
@@ -160,27 +159,22 @@ export function SidebarNav({ collapsible = true }: { collapsible?: boolean }) {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-50 h-screen",
-        collapsible ? "w-20" : "w-72"
+        "fixed left-0 top-0 z-50 h-screen transition-[width] duration-300 ease-out",
+        collapsible ? (isExpanded ? "w-72" : "w-20") : "w-72"
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div
-        className={cn(
-          "flex h-full flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-300 ease-out",
-          isExpanded ? "w-72" : "w-20"
-        )}
-      >
+      <div className="flex h-full w-full flex-col border-r border-sidebar-border bg-sidebar">
       {/* Logo */}
-      <div className={cn("flex items-center py-6", isExpanded ? "gap-3 px-6" : "justify-center px-0")}>
+      <div className="flex items-center gap-3 px-3 py-6">
         <div className="flex size-10 items-center justify-center rounded-xl bg-primary shadow-[0_0_20px_oklch(0.75_0.18_165/0.25)] transition-shadow duration-300 hover:shadow-[0_0_30px_oklch(0.75_0.18_165/0.4)]">
           <Zap className="size-5 text-primary-foreground" />
         </div>
         <div
           className={cn(
-            "overflow-hidden transition-all duration-300",
-            isExpanded ? "w-auto opacity-100" : "w-0 opacity-0"
+            "overflow-hidden whitespace-nowrap transition-all duration-300",
+            isExpanded ? "w-42.5 opacity-100" : "w-0 opacity-0"
           )}
         >
           <h1 className="font-mono text-xl font-bold tracking-tight text-sidebar-foreground">
@@ -191,15 +185,13 @@ export function SidebarNav({ collapsible = true }: { collapsible?: boolean }) {
       </div>
 
       {/* Navigation */}
-      <nav className={cn("flex-1 overflow-y-auto pb-4", isExpanded ? "px-3" : "px-2")}>
+      <nav className="menu-scroll flex-1 overflow-y-auto overflow-x-hidden px-3 pb-4">
         {navSections.map((section) => (
           <div key={section.title} className="mb-6">
             <p
               className={cn(
-                "mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground transition-all duration-200",
-                isExpanded
-                  ? "px-3 opacity-100"
-                  : "px-0 text-center opacity-0"
+                "mb-2 px-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground transition-opacity duration-200",
+                isExpanded ? "opacity-100" : "opacity-0"
               )}
             >
               {section.title}
@@ -212,8 +204,7 @@ export function SidebarNav({ collapsible = true }: { collapsible?: boolean }) {
                       <button
                         onClick={() => toggleExpand(item.label)}
                         className={cn(
-                          "flex w-full items-center rounded-lg py-2.5 text-sm font-medium transition-all duration-200",
-                          isExpanded ? "gap-3 px-3" : "justify-center gap-0 px-0",
+                          "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
                           expandedItems[item.label]
                             ? "bg-sidebar-accent text-sidebar-accent-foreground"
                             : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
@@ -224,8 +215,8 @@ export function SidebarNav({ collapsible = true }: { collapsible?: boolean }) {
                         </span>
                         <span
                           className={cn(
-                            "overflow-hidden whitespace-nowrap transition-all duration-300",
-                            isExpanded ? "flex-1 opacity-100" : "w-0 opacity-0"
+                            "flex-1 overflow-hidden whitespace-nowrap transition-all duration-300",
+                            isExpanded ? "max-w-40 opacity-100" : "max-w-0 opacity-0"
                           )}
                         >
                           {item.label}
@@ -236,14 +227,17 @@ export function SidebarNav({ collapsible = true }: { collapsible?: boolean }) {
                           </span>
                         )}
                         <span
-                          className="transition-transform duration-200"
+                          className={cn(
+                            "overflow-hidden transition-all duration-200",
+                            isExpanded ? "w-4 opacity-100" : "w-0 opacity-0"
+                          )}
                           style={{
                             transform: expandedItems[item.label]
                               ? "rotate(0deg)"
                               : "rotate(-90deg)",
                           }}
                         >
-                          {isExpanded && <ChevronDown className="size-4" />}
+                          <ChevronDown className="size-4" />
                         </span>
                       </button>
                       <div
@@ -274,8 +268,7 @@ export function SidebarNav({ collapsible = true }: { collapsible?: boolean }) {
                       href={item.href}
                       onClick={() => setActiveItem(item.label)}
                       className={cn(
-                        "flex items-center rounded-lg py-2.5 text-sm font-medium transition-all duration-200",
-                        isExpanded ? "gap-3 px-3" : "justify-center gap-0 px-0",
+                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
                         activeItem === item.label
                           ? "bg-primary/10 text-primary shadow-[inset_0_0_20px_oklch(0.75_0.18_165/0.05)]"
                           : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
@@ -284,8 +277,8 @@ export function SidebarNav({ collapsible = true }: { collapsible?: boolean }) {
                       {item.icon}
                       <span
                         className={cn(
-                          "overflow-hidden whitespace-nowrap transition-all duration-300",
-                          isExpanded ? "flex-1 opacity-100" : "w-0 opacity-0"
+                          "flex-1 overflow-hidden whitespace-nowrap transition-all duration-300",
+                          isExpanded ? "max-w-40 opacity-100" : "max-w-0 opacity-0"
                         )}
                       >
                         {item.label}
@@ -315,8 +308,7 @@ export function SidebarNav({ collapsible = true }: { collapsible?: boolean }) {
       <div className="border-t border-sidebar-border p-4">
         <div
           className={cn(
-            "group flex items-center rounded-lg bg-sidebar-accent/50 py-3 transition-all duration-300 hover:bg-sidebar-accent",
-            isExpanded ? "gap-3 px-3" : "justify-center gap-0 px-0"
+            "group flex items-center gap-3 rounded-lg bg-sidebar-accent/50 px-3 py-3 transition-all duration-300 hover:bg-sidebar-accent"
           )}
         >
           <div className="flex size-9 items-center justify-center rounded-full bg-primary/20 font-mono text-sm font-bold text-primary ring-2 ring-primary/10 transition-all duration-300 group-hover:ring-primary/30 group-hover:shadow-[0_0_15px_oklch(0.75_0.18_165/0.2)]">
@@ -324,8 +316,8 @@ export function SidebarNav({ collapsible = true }: { collapsible?: boolean }) {
           </div>
           <div
             className={cn(
-              "overflow-hidden whitespace-nowrap transition-all duration-300",
-              isExpanded ? "flex-1 opacity-100" : "w-0 opacity-0"
+              "flex-1 overflow-hidden whitespace-nowrap transition-all duration-300",
+              isExpanded ? "max-w-35 opacity-100" : "max-w-0 opacity-0"
             )}
           >
             <p className="text-sm font-semibold text-sidebar-foreground">
@@ -333,9 +325,12 @@ export function SidebarNav({ collapsible = true }: { collapsible?: boolean }) {
             </p>
             <p className="text-xs text-muted-foreground">Pro Account</p>
           </div>
-          {isExpanded && (
-            <Settings className="size-4 text-muted-foreground transition-transform duration-300 group-hover:rotate-90" />
-          )}
+          <Settings
+            className={cn(
+              "size-4 text-muted-foreground transition-all duration-300 group-hover:rotate-90",
+              isExpanded ? "opacity-100" : "w-0 opacity-0"
+            )}
+          />
         </div>
       </div>
       </div>

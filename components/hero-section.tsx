@@ -1,9 +1,10 @@
 "use client"
 
-import { ArrowRight, BookOpen, CirclePlay, Sparkles } from "lucide-react"
+import { ArrowRight, BookOpen, ChevronDown, CirclePlay, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollReveal } from "@/components/scroll-reveal"
 import { useMarketSim } from "@/hooks/use-market-sim"
+import { useEffect, useState } from "react"
 
 function formatCompact(value: number) {
   return new Intl.NumberFormat("en-US", {
@@ -14,12 +15,43 @@ function formatCompact(value: number) {
 
 export function HeroSection() {
   const { leaderboard, marketVolume } = useMarketSim(2200)
+  const [scrollY, setScrollY] = useState(0)
+
+  useEffect(() => {
+    let frameId = 0
+
+    const onScroll = () => {
+      cancelAnimationFrame(frameId)
+      frameId = requestAnimationFrame(() => {
+        setScrollY(window.scrollY)
+      })
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true })
+    onScroll()
+
+    return () => {
+      cancelAnimationFrame(frameId)
+      window.removeEventListener("scroll", onScroll)
+    }
+  }, [])
+
+  const parallaxOffset = Math.min(scrollY * 0.08, 28)
 
   return (
     <section className="relative overflow-hidden px-6 pb-16 pt-20 sm:px-8 sm:pt-24 lg:px-16">
-      <div className="absolute inset-0 animate-gradient bg-[linear-gradient(135deg,oklch(0.12_0.02_260),oklch(0.08_0.03_200),oklch(0.1_0.04_165),oklch(0.06_0.02_280),oklch(0.12_0.02_260))] bg-[length:300%_300%]" />
-      <div className="pointer-events-none absolute left-1/3 top-20 size-72 rounded-full bg-primary/10 blur-[90px]" />
-      <div className="pointer-events-none absolute bottom-0 right-10 size-80 rounded-full bg-chart-2/10 blur-[110px]" />
+      <div
+        className="absolute inset-0 animate-gradient bg-[linear-gradient(135deg,oklch(0.12_0.02_260),oklch(0.08_0.03_200),oklch(0.1_0.04_165),oklch(0.06_0.02_280),oklch(0.12_0.02_260))] bg-size-[300%_300%]"
+        style={{ transform: `translateY(${parallaxOffset * -0.35}px)` }}
+      />
+      <div
+        className="pointer-events-none absolute left-1/3 top-20 size-72 rounded-full bg-primary/10 blur-[90px]"
+        style={{ transform: `translateY(${parallaxOffset * -0.6}px)` }}
+      />
+      <div
+        className="pointer-events-none absolute bottom-0 right-10 size-80 rounded-full bg-chart-2/10 blur-[110px]"
+        style={{ transform: `translateY(${parallaxOffset * 0.45}px)` }}
+      />
 
       <div className="relative z-10 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
         <ScrollReveal direction="left">
@@ -81,7 +113,7 @@ export function HeroSection() {
 
         <div className="grid gap-6">
           <ScrollReveal direction="right" delay={120}>
-            <div className="relative overflow-hidden rounded-[2rem] border border-border/70 bg-card/35 p-6 backdrop-blur-sm">
+            <div className="relative overflow-hidden rounded-4xl border border-border/70 bg-card/35 p-6 backdrop-blur-sm">
               <div className="pointer-events-none absolute -right-10 -top-10 size-44 rounded-full border border-primary/20" />
               <div className="pointer-events-none absolute right-4 top-4 size-28 rounded-full bg-primary/10 blur-xl" />
               <p className="text-xs uppercase tracking-widest text-muted-foreground">Spheric Alpha Block</p>
@@ -113,6 +145,20 @@ export function HeroSection() {
           </ScrollReveal>
         </div>
       </div>
+
+      <button
+        type="button"
+        onClick={() =>
+          window.scrollTo({
+            top: window.innerHeight * 0.9,
+            behavior: "smooth",
+          })
+        }
+        className="absolute bottom-5 left-1/2 z-20 hidden -translate-x-1/2 items-center gap-2 rounded-full border border-border bg-background/60 px-4 py-2 text-xs tracking-wide text-muted-foreground backdrop-blur-sm transition-all duration-300 hover:border-primary/30 hover:text-foreground md:inline-flex"
+      >
+        Scroll Down
+        <ChevronDown className="size-4 animate-bounce" />
+      </button>
     </section>
   )
 }
