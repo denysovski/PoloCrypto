@@ -9,19 +9,11 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 
-type CoinKey = "bitcoin" | "ethereum" | "solana"
-
 type PricePoint = {
   timestamp: number
   price: number
   timeLabel: string
 }
-
-const coinOptions: { key: CoinKey; label: string; symbol: string }[] = [
-  { key: "bitcoin", label: "Bitcoin", symbol: "BTC" },
-  { key: "ethereum", label: "Ethereum", symbol: "ETH" },
-  { key: "solana", label: "Solana", symbol: "SOL" },
-]
 
 function formatCompactPrice(value: number) {
   if (value >= 1000) {
@@ -34,111 +26,78 @@ function formatCompactPrice(value: number) {
 }
 
 export function LiveCoinChart() {
-  const [selectedCoin, setSelectedCoin] = useState<CoinKey>("bitcoin")
   const [points, setPoints] = useState<PricePoint[]>([])
-  const [change24h, setChange24h] = useState(0)
+  const [change1h, setChange1h] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    let isMounted = true
-
-    const loadSeries = async () => {
-      setIsLoading(true)
-      try {
-        const response = await fetch(
-          `https://api.coingecko.com/api/v3/coins/${selectedCoin}/market_chart?vs_currency=usd&days=1&interval=hourly`,
-          { cache: "no-store" }
-        )
-        const data = await response.json()
-
-        if (!isMounted) return
-
-        const series: PricePoint[] = (data.prices ?? []).map((entry: [number, number]) => {
-          const time = new Date(entry[0])
-          return {
-            timestamp: entry[0],
-            price: entry[1],
-            timeLabel: time.toLocaleTimeString("en-US", {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-          }
-        })
-
-        setPoints(series.slice(-36))
-      } catch {
-        if (!isMounted) return
-        setPoints([])
-      } finally {
-        if (isMounted) setIsLoading(false)
-      }
-    }
-
-    loadSeries()
-
-    return () => {
-      isMounted = false
-    }
-  }, [selectedCoin])
 
   useEffect(() => {
     let active = true
 
-    const pollLivePrice = async () => {
+    const loadLastHourSeries = async () => {
+      if (!active) return
+      setIsLoading(true)
+
       try {
+        const nowSec = Math.floor(Date.now() / 1000)
+        const oneHourAgoSec = nowSec - 60 * 60
+
         const response = await fetch(
-          `https://api.coingecko.com/api/v3/simple/price?ids=${selectedCoin}&vs_currencies=usd&include_24hr_change=true`,
+          `https://api.coingecko.com/api/v3/coins/bitcoin/market_chart/range?vs_currency=usd&from=${oneHourAgoSec}&to=${nowSec}`,
           { cache: "no-store" }
         )
+
         const data = await response.json()
         if (!active) return
 
-        const livePrice = data?.[selectedCoin]?.usd
-        const dayChange = data?.[selectedCoin]?.usd_24h_change
-
-        if (typeof livePrice === "number") {
-          const now = Date.now()
-          const time = new Date(now)
-
-          setPoints((prev) => {
-            const next = [
-              ...prev,
-              {
-                timestamp: now,
-                price: livePrice,
-                timeLabel: time.toLocaleTimeString("en-US", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }),
-              },
-            ]
-            return next.slice(-45)
+        const parsed: PricePoint[] = (data.prices ?? [])
+          .map((entry: [number, number]) => {
+            const date = new Date(entry[0])
+            return {
+              timestamp: entry[0],
+              price: entry[1],
+              timeLabel: date.toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            }
           })
-        }
+          .sort((a: PricePoint, b: PricePoint) => a.timestamp - b.timestamp)
 
-        if (typeof dayChange === "number") {
-          setChange24h(dayChange)
+        const deduped = parsed.filter(
+          (point, index) => index === 0 || point.timestamp !== parsed[index - 1].timestamp
+        )
+
+        setPoints(deduped)
+
+        if (deduped.length >= 2) {
+          const first = deduped[0].price
+          const last = deduped[deduped.length - 1].price
+          setChange1h(((last - first) / first) * 100)
+        } else {
+          setChange1h(0)
         }
       } catch {
-        // Silent fail to keep chart resilient
+        if (!active) return
+        setPoints([])
+        setChange1h(0)
+      } finally {
+        if (active) {
+          setIsLoading(false)
+        }
       }
     }
 
-    pollLivePrice()
-    const interval = setInterval(pollLivePrice, 15000)
+    loadLastHourSeries()
+    const interval = setInterval(loadLastHourSeries, 15000)
 
     return () => {
       active = false
       clearInterval(interval)
     }
-  }, [selectedCoin])
-
-  const selectedMeta = useMemo(
-    () => coinOptions.find((coin) => coin.key === selectedCoin) ?? coinOptions[0],
-    [selectedCoin]
-  )
+  }, [])
 
   const latestPrice = points[points.length - 1]?.price ?? 0
+  const pointCount = useMemo(() => points.length, [points])
 
   return (
     <section className="px-6 py-24 sm:px-8 lg:px-16">
@@ -149,28 +108,11 @@ export function LiveCoinChart() {
               Live Market API Feed
             </p>
             <h2 className="font-mono text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
-              Real-Time Coin Line
+              Bitcoin Last Hour Line
             </h2>
             <p className="mt-3 text-sm text-muted-foreground">
-              Data source: CoinGecko public API (live market pricing).
+              Data source: CoinGecko range endpoint, refreshed every 15s.
             </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {coinOptions.map((coin) => (
-              <button
-                key={coin.key}
-                type="button"
-                onClick={() => setSelectedCoin(coin.key)}
-                className={`rounded-full border px-4 py-2 text-sm font-medium transition-all duration-200 ${
-                  selectedCoin === coin.key
-                    ? "border-primary/40 bg-primary/15 text-primary"
-                    : "border-border bg-background/60 text-muted-foreground hover:border-primary/30 hover:text-foreground"
-                }`}
-              >
-                {coin.symbol}
-              </button>
-            ))}
           </div>
         </div>
       </ScrollReveal>
@@ -179,15 +121,15 @@ export function LiveCoinChart() {
         <div className="dynamic-card rounded-4xl border border-border bg-card/30 p-4 backdrop-blur-sm sm:p-6">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">Selected Asset</p>
-              <p className="font-mono text-2xl font-bold text-foreground">{selectedMeta.label}</p>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Asset</p>
+              <p className="font-mono text-2xl font-bold text-foreground">Bitcoin (BTC)</p>
             </div>
             <div className="text-right">
               <p className="text-xs uppercase tracking-widest text-muted-foreground">Live Price</p>
               <p className="font-mono text-2xl font-bold text-foreground">${formatCompactPrice(latestPrice)}</p>
-              <p className={`text-sm font-semibold ${change24h >= 0 ? "text-chart-1" : "text-destructive"}`}>
-                {change24h >= 0 ? "+" : ""}
-                {change24h.toFixed(2)}%
+              <p className={`text-sm font-semibold ${change1h >= 0 ? "text-chart-1" : "text-destructive"}`}>
+                {change1h >= 0 ? "+" : ""}
+                {change1h.toFixed(2)}% (1h)
               </p>
             </div>
           </div>
@@ -200,7 +142,7 @@ export function LiveCoinChart() {
                   color: "oklch(0.75 0.18 165)",
                 },
               }}
-              className="h-full w-full"
+              className="h-full w-full aspect-auto!"
             >
               <LineChart data={points} margin={{ left: 12, right: 12, top: 12, bottom: 0 }}>
                 <CartesianGrid vertical={false} strokeDasharray="3 3" />
@@ -233,6 +175,7 @@ export function LiveCoinChart() {
                   stroke="var(--color-price)"
                   strokeWidth={2.3}
                   dot={false}
+                  connectNulls={true}
                   isAnimationActive={true}
                   animationDuration={650}
                 />
@@ -241,7 +184,10 @@ export function LiveCoinChart() {
           </div>
 
           {isLoading && (
-            <p className="mt-3 text-xs text-muted-foreground">Loading market series...</p>
+            <p className="mt-3 text-xs text-muted-foreground">Loading Bitcoin last-hour history...</p>
+          )}
+          {!isLoading && pointCount < 2 && (
+            <p className="mt-3 text-xs text-muted-foreground">Waiting for enough points to draw full line...</p>
           )}
         </div>
       </ScrollReveal>
