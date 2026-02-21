@@ -42,7 +42,9 @@ export function LiveCoinChart() {
           "https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=60",
           { cache: "no-store" }
         )
-        if (!response.ok || !active) return
+        if (!response.ok || !active) {
+          throw new Error("Primary preload failed")
+        }
 
         const klines = (await response.json()) as [
           number,
@@ -75,6 +77,42 @@ export function LiveCoinChart() {
         if (!active) return
         setPoints(seededPoints)
       } catch {
+        try {
+          const fallbackResponse = await fetch(
+            "https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity=60",
+            { cache: "no-store" }
+          )
+          if (!fallbackResponse.ok || !active) return
+
+          const candles = (await fallbackResponse.json()) as [
+            number,
+            number,
+            number,
+            number,
+            number,
+            number
+          ][]
+
+          const fallbackSeed = candles
+            .slice(0, 60)
+            .map((candle) => {
+              const timestamp = Number(candle[0]) * 1000
+              const price = Number(candle[4])
+              return {
+                timestamp,
+                price,
+                timeLabel: new Date(timestamp).toLocaleTimeString("en-US", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }),
+              }
+            })
+            .sort((a, b) => a.timestamp - b.timestamp)
+
+          if (!active) return
+          setPoints(fallbackSeed)
+        } catch {
+        }
       }
     }
 
@@ -124,7 +162,9 @@ export function LiveCoinChart() {
           }
 
           const cutoff = secondStamp - hourMs
-          return next.filter((point) => point.timestamp >= cutoff)
+          return next
+            .filter((point) => point.timestamp >= cutoff)
+            .sort((a, b) => a.timestamp - b.timestamp)
         })
       }
     }
@@ -228,7 +268,7 @@ export function LiveCoinChart() {
                 <XAxis
                   dataKey="timestamp"
                   type="number"
-                  scale="time"
+                  scale="linear"
                   domain={["dataMin", "dataMax"]}
                   ticks={timeTicks}
                   tickLine={false}
