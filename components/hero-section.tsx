@@ -1,6 +1,6 @@
-"use client"
+﻿"use client"
 
-import { ArrowRight, BookOpen, ChevronDown, CirclePlay, Sparkles } from "lucide-react"
+import { Activity, ArrowRight, BookOpen, ChevronDown, CirclePlay, Clock3, Layers3, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollReveal } from "@/components/scroll-reveal"
 import { useMarketSim } from "@/hooks/use-market-sim"
@@ -143,7 +143,46 @@ export function HeroSection() {
             </div>
           </ScrollReveal>
 
-          <ScrollReveal direction="up" delay={180}>
+          <ScrollReveal direction="up" delay={155}>
+            <div className="dynamic-card rounded-4xl border border-border/70 bg-background/40 p-5 backdrop-blur-sm">
+              <div className="mb-4 flex items-center justify-between">
+                <p className="text-xs uppercase tracking-widest text-muted-foreground">Signal Briefing</p>
+                <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                  <span className="size-1.5 animate-pulse rounded-full bg-primary" />
+                  Live
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                <div className="rounded-xl border border-border/60 bg-card/30 p-3">
+                  <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-primary">
+                    <Layers3 className="size-3.5" /> Trend Stack
+                  </p>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                    Momentum breadth is expanding while volatility remains controlled, favoring continuation setups.
+                  </p>
+                </div>
+                <div className="rounded-xl border border-border/60 bg-card/30 p-3">
+                  <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-primary">
+                    <Activity className="size-3.5" /> Execution Pulse
+                  </p>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                    Short bursts of volume appear near resistance retests; cleaner entries come after confirmation candles.
+                  </p>
+                </div>
+                <div className="rounded-xl border border-border/60 bg-card/30 p-3">
+                  <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-primary">
+                    <Clock3 className="size-3.5" /> Session Note
+                  </p>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                    Highest liquidity windows show tighter spreads, which improves fills and reduces slippage drag.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </ScrollReveal>
+
+          <ScrollReveal direction="up" delay={200}>
             <div className="grid grid-cols-2 gap-4">
               {leaderboard.slice(0, 2).map((coin, index) => (
                 <div key={coin.symbol} className="dynamic-card rounded-[1.6rem] border border-border/70 bg-background/45 p-4 backdrop-blur-sm">
