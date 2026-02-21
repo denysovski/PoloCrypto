@@ -33,6 +33,50 @@ export function LiveCoinChart() {
 
   useEffect(() => {
     let socket: WebSocket | null = null
+    let active = true
+    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null
+
+    const preloadLastHour = async () => {
+      try {
+        const response = await fetch(
+          "https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=60",
+          { cache: "no-store" }
+        )
+        if (!response.ok || !active) return
+
+        const klines = (await response.json()) as [
+          number,
+          string,
+          string,
+          string,
+          string,
+          string,
+          number,
+          string,
+          number,
+          string,
+          string,
+          string
+        ][]
+
+        const seededPoints: PricePoint[] = klines.map((kline) => {
+          const timestamp = Number(kline[0])
+          const price = Number(kline[4])
+          return {
+            timestamp,
+            price,
+            timeLabel: new Date(timestamp).toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          }
+        })
+
+        if (!active) return
+        setPoints(seededPoints)
+      } catch {
+      }
+    }
 
     const connect = () => {
       socket = new WebSocket("wss://stream.binance.com:9443/ws/btcusdt@trade")
@@ -43,6 +87,8 @@ export function LiveCoinChart() {
 
       socket.onclose = () => {
         setIsConnected(false)
+        if (!active) return
+        reconnectTimeout = setTimeout(connect, 1500)
       }
 
       socket.onerror = () => {
@@ -83,9 +129,11 @@ export function LiveCoinChart() {
       }
     }
 
-    connect()
+    preloadLastHour().finally(connect)
 
     return () => {
+      active = false
+      if (reconnectTimeout) clearTimeout(reconnectTimeout)
       if (socket && socket.readyState === WebSocket.OPEN) {
         socket.close()
       }
