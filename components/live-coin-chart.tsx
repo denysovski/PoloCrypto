@@ -29,6 +29,8 @@ export function LiveCoinChart() {
   const [points, setPoints] = useState<PricePoint[]>([])
   const [isConnected, setIsConnected] = useState(false)
 
+  const hourMs = 60 * 60 * 1000
+
   useEffect(() => {
     let socket: WebSocket | null = null
 
@@ -75,7 +77,8 @@ export function LiveCoinChart() {
             next.push({ timestamp: secondStamp, price, timeLabel: label })
           }
 
-          return next.slice(-180)
+          const cutoff = secondStamp - hourMs
+          return next.filter((point) => point.timestamp >= cutoff)
         })
       }
     }
@@ -96,6 +99,21 @@ export function LiveCoinChart() {
       ? ((points[points.length - 1].price - points[0].price) / points[0].price) *
         100
       : 0
+
+  const timeTicks = useMemo(() => {
+    if (points.length < 2) return [] as number[]
+
+    const latestTimestamp = points[points.length - 1].timestamp
+    const startTimestamp = latestTimestamp - hourMs
+    const firstTenMinuteMark = Math.ceil(startTimestamp / 600000) * 600000
+    const ticks: number[] = []
+
+    for (let tick = firstTenMinuteMark; tick <= latestTimestamp; tick += 600000) {
+      ticks.push(tick)
+    }
+
+    return ticks
+  }, [points, hourMs])
 
   const yDomain = useMemo(() => {
     if (points.length < 2) return [0, 1]
@@ -157,13 +175,23 @@ export function LiveCoinChart() {
               }}
               className="h-full w-full aspect-auto!"
             >
-              <LineChart data={points} margin={{ left: 12, right: 12, top: 12, bottom: 0 }}>
+              <LineChart data={points} margin={{ left: 12, right: 12, top: 32, bottom: 0 }}>
                 <CartesianGrid vertical={false} strokeDasharray="3 3" />
                 <XAxis
-                  dataKey="timeLabel"
+                  dataKey="timestamp"
+                  type="number"
+                  scale="time"
+                  domain={["dataMin", "dataMax"]}
+                  ticks={timeTicks}
                   tickLine={false}
                   axisLine={false}
                   minTickGap={24}
+                  tickFormatter={(value) =>
+                    new Date(Number(value)).toLocaleTimeString("en-US", {
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })
+                  }
                 />
                 <YAxis
                   tickLine={false}
